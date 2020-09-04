@@ -20,7 +20,7 @@ const baseName =
   "https://api-in-staging-snapvatme-qa.azurewebsites.net/api/v1/";
 
 const getInvoiceList = async (params) => {
-  const apiName = baseName + "organization-invoices/8/?pagination=no";
+  const apiName = baseName + "organization-invoices/8?pagination=no";
   const response = await Axios.get(apiName, {
     headers: { Authorization: token },
   });
