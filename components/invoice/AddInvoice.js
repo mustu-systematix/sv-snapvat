@@ -3,7 +3,7 @@ import actions from "../../store/Actions";
 import { connect } from "react-redux";
 import { sortingAnArrayOfObject, currencyFormaterAED } from "../../utils/Utils";
 import { useRouter } from "next/router";
-import { Input } from "antd";
+import { Input, Button } from "antd";
 import _ from "lodash"
 import moment from "moment";
 
@@ -20,13 +20,14 @@ function AddInvoice(props) {
   const [invoiceDate, setInvoiceDate] = useState("");
   const [coa, setCoa] = useState(0);
   const [invoiceNumber, setInvoiceNumber] = useState("");
-  const [isError, setError] = useState(false);
+  const [error, setError] = useState("");
   const [standardRate, setStandardRate] = useState(0);
   const [tax, setTax] = useState(0);
   const [zeroRate, setZeroRate] = useState(0);
   const [exemptRate, setExemptRate] = useState(0);
   const [subTotal, setSubTotal] = useState(0);
   const [grandTotal, setGrandTotal] = useState(0);
+  const [isLoading, setLoader] = useState(false);
 
   const router = useRouter();
 
@@ -42,9 +43,15 @@ function AddInvoice(props) {
   }, [standardRate, exemptRate, zeroRate]);
 
   useEffect(() => {
-    if(!_.isEmpty(props.createInvoiceData)){
-      router.push("/")
-      props.createInvoiceDispatch({})
+    if (!_.isEmpty(props.createInvoiceData)) {
+      setLoader(false)
+      if (props.createInvoiceData.isSuccess) {
+        router.push("/")
+        props.createInvoiceDispatch({})
+      } else {
+        setError(props.createInvoiceData.message)
+        window.scrollTo(500, 0);
+      }
     }
   }, [props.createInvoiceData]);
 
@@ -55,11 +62,20 @@ function AddInvoice(props) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
+    setError("")
     if (invoiceNumber == "" || invoiceDate == "" || subTotal == 0) {
-      setError(true)
+      if (invoiceNumber == "") {
+        setError("Please enter invoice number")
+      } else if (invoiceDate == "") {
+        setError("Please select invoice date")
+      } else if (subTotal == 0) {
+        setError("Total cannot be AED 0.00")
+      }
+      window.scrollTo(500, 0);
+      setLoader(false)
       return;
     }
+    setLoader(true)
     const postData = {
       contactId: customerId == 0 ? props.customerList[0].id : customerId,
       attachments: [],
@@ -178,7 +194,10 @@ function AddInvoice(props) {
           />
         </a>
       </div>
-      <form className={"needs-validation" + isError == true ? "was-validated" : ""} novalidate onSubmit={handleSubmit}>
+      {error != "" && <div class="alert alert-danger" role="alert">
+        {error}
+      </div> || ""}
+      <form className={"needs-validation"} novalidate onSubmit={handleSubmit}>
         <div className="form-row">
           <div className="col-md-4 mb-3">
             <label htmlFor="validationCustom01">Customer</label>
@@ -363,9 +382,9 @@ function AddInvoice(props) {
             >
               Cancel
         </button>
-            <button className="btn btn-primary" type="submit">
+            <Button className="btn btn-primary" type="submit" onClick={handleSubmit} loading={isLoading}>
               Create Invoice
-        </button>
+        </Button>
           </div>
         </div>
       </form>

@@ -117,12 +117,17 @@ export function* handleGetAccounts(params) {
 }
 
 export function* handleCreateInvoice(params) {
-  console.log('params: ', params);
+
   try {
     const data = yield call(createInvoice, params.postdata);
-    yield put(createInvoiceDispatch(data));
+    yield put(createInvoiceDispatch({...data, isSuccess: true}));
   } catch (error) {
-    yield put(createInvoiceDispatch({}));
+
+    if (error.response && error.response.data && error.response.data.error) {
+      yield put(createInvoiceDispatch({ isSuccess: false, message: error.response.data.error }));
+    } else {
+      yield put(createInvoiceDispatch({ isSuccess: false, message: "Something went wrong!" }));
+    }
   }
 }
 
